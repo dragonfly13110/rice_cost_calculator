@@ -36,6 +36,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
+   * Determine currently selected calculation mode: 'perRai' or 'total'.
+   */
+  function getCalculationMode() {
+    const selected = document.querySelector('input[name="calculationMode"]:checked');
+    return selected ? selected.value : 'perRai';
+  }
+
+  /**
    * Create a table row with inputs appropriate for the current method.
    * @param {string} name - Optional category name to prefill.
    */
@@ -188,31 +196,42 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   function calculate() {
     const rows = Array.from(costTableBody.querySelectorAll('tr'));
-    const method = getInputMethod();
-    let totalCost = 0;
+    const calculationMode = getCalculationMode();
+    let totalCostFromTable = 0;
     const labels = [];
     const data = [];
     rows.forEach(tr => {
       const cells = tr.children;
       const categoryName = cells[0].querySelector('input').value || 'ไม่ระบุ';
-      // Total cell is always the cell before the action cell (second last cell)
       const totalTdIndex = cells.length - 2;
       const totalVal = parseFloat(cells[totalTdIndex].textContent.replace(/,/g, ''));
       if (!isNaN(totalVal) && totalVal > 0) {
         labels.push(categoryName);
         data.push(totalVal);
-        totalCost += totalVal;
+        totalCostFromTable += totalVal;
       }
     });
 
-    // Compute cost per rai and per kg based on inputs
     const areaInput = document.getElementById('area');
-    const yieldInput = document.getElementById('yield');
     const area = parseFloat(areaInput.value);
-    const yieldVal = parseFloat(yieldInput.value);
+    let totalCost;
+
+    if (calculationMode === 'perRai') {
+      if (isNaN(area) || area <= 0) {
+        alert('กรุณาระบุพื้นที่เพาะปลูก (ไร่) ให้ถูกต้อง');
+        return;
+      }
+      totalCost = totalCostFromTable * area;
+    } else { // calculationMode is 'total'
+      totalCost = totalCostFromTable;
+    }
+
+    const yieldInput = document.getElementById('yield');
+    const yieldTons = parseFloat(yieldInput.value);
+    const yieldKg = (!isNaN(yieldTons) && yieldTons > 0) ? yieldTons * 1000 : null;
 
     const costPerRai = (!isNaN(area) && area > 0) ? totalCost / area : null;
-    const costPerKg = (!isNaN(yieldVal) && yieldVal > 0) ? totalCost / yieldVal : null;
+    const costPerKg = (yieldKg != null) ? totalCost / yieldKg : null;
 
     // Update summary
     summaryContainer.innerHTML = '';
@@ -234,7 +253,10 @@ document.addEventListener('DOMContentLoaded', () => {
     kgCard.innerHTML = `<h3>ต้นทุนต่อกิโลกรัม</h3><p>${kgText}</p>`;
     summaryContainer.appendChild(kgCard);
 
-    // Update chart
+    // Show selling price per ton (and equivalent per-kg) if provided
+    includePricePerTon();
+
+    // Update chart - The chart shows proportions, so the raw data from the table is correct.
     updateChart(labels, data);
 
     // Show results section
@@ -291,25 +313,64 @@ document.addEventListener('DOMContentLoaded', () => {
    * Generate a PDF of the results section using html2canvas and jsPDF.
    */
   async function generatePDF() {
-    const element = document.getElementById('results');
-    // Use html2canvas to capture the element as a canvas
-    const canvas = await html2canvas(element, { scale: 2 });
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-    // Calculate image dimensions to fit within A4 page while maintaining aspect ratio
-    const imgProps = {
-      width: canvas.width,
-      height: canvas.height
-    };
-    const ratio = Math.min(pdfWidth / imgProps.width, pdfHeight / imgProps.height);
-    const imgWidth = imgProps.width * ratio;
-    const imgHeight = imgProps.height * ratio;
-    const x = (pdfWidth - imgWidth) / 2;
-    const y = 10; // top margin
-    pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
-    pdf.save('rice_cost_report.pdf');
+  // Capture the report area (table + results) so the table is included in the PDF.
+  // To avoid Thai text in input fields being slightly clipped at the bottom,
+  // clone the element, add a small bottom padding, render the clone off-screen,
+  // then remove it. This preserves on-screen styles while giving extra space.
+  const original = document.getElementById('reportArea') || document.getElementById('results');
+  if (!original) return;
+
+  // Create an off-screen clone with extra bottom padding
+  const clone = original.cloneNode(true);
+  const origStyle = getComputedStyle(original);
+  clone.style.boxSizing = 'border-box';
+  clone.style.background = origStyle.backgroundColor || '#ffffff';
+  // Add a bit of padding to avoid clipping of input text
+  clone.style.paddingBottom = '28px';
+  // Ensure clone has same width as original for consistent rendering
+  clone.style.width = origStyle.width;
+  clone.style.position = 'absolute';
+  clone.style.left = '-9999px';
+  clone.style.top = '0';
+  document.body.appendChild(clone);
+
+  // Wait a tick so browser can render the clone and load fonts if needed
+  await new Promise(resolve => setTimeout(resolve, 80));
+
+  // Capture the clone as canvas
+  const canvas = await html2canvas(clone, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+
+  // Clean up clone
+  document.body.removeChild(clone);
+
+  const imgData = canvas.toDataURL('image/png');
+  const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
+  const pdfWidth = pdf.internal.pageSize.getWidth();
+  const pdfHeight = pdf.internal.pageSize.getHeight();
+  // Calculate image dimensions to fit within A4 page while maintaining aspect ratio
+  const imgProps = { width: canvas.width, height: canvas.height };
+  const ratio = Math.min(pdfWidth / imgProps.width, pdfHeight / imgProps.height);
+  const imgWidth = imgProps.width * ratio;
+  const imgHeight = imgProps.height * ratio;
+  const x = (pdfWidth - imgWidth) / 2;
+  const y = 10; // top margin
+  pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+  pdf.save('rice_cost_report.pdf');
+  }
+
+  /**
+   * Include price per kg in the summary if provided
+   */
+  function includePricePerTon() {
+    const priceInput = document.getElementById('pricePerTon');
+    const priceVal = parseFloat(priceInput.value);
+    if (!isNaN(priceVal) && priceVal > 0) {
+      const priceCard = document.createElement('div');
+      priceCard.classList.add('card');
+      const perKg = priceVal / 1000;
+      priceCard.innerHTML = `<h3>ราคาจำหน่าย</h3><p>${formatNumber(priceVal)} บาท/ตัน<br><small>${formatNumber(perKg)} บาท/กก.</small></p>`;
+      summaryContainer.appendChild(priceCard);
+    }
   }
 
   /**
@@ -334,6 +395,21 @@ document.addEventListener('DOMContentLoaded', () => {
     resultsSection.style.display = 'none';
   }
 
+  /**
+   * Handle switching between calculation modes.
+   */
+  function onCalculationModeChange() {
+    // Update the total column header based on selected mode
+    const mode = getCalculationMode();
+    const totalHeader = document.querySelector('#costTable thead tr#tableHeader th:nth-child(5)');
+    if (totalHeader) {
+      totalHeader.textContent = (mode === 'perRai') ? 'ค่าใช้จ่ายต่อไร่ (บาท)' : 'รวม (บาท)';
+    }
+
+    // Clear results because switching mode invalidates previous totals
+    resultsSection.style.display = 'none';
+  }
+
   // Add initial rows using predefined categories
   function initRows() {
     predefinedCategories.forEach(name => addRow(name));
@@ -346,7 +422,12 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('input[name="inputMethod"]').forEach(radio => {
     radio.addEventListener('change', onMethodChange);
   });
+  document.querySelectorAll('input[name="calculationMode"]').forEach(radio => {
+    radio.addEventListener('change', onCalculationModeChange);
+  });
 
   // Initialize table with default rows
   initRows();
+  // Ensure header matches current calculation mode on load
+  onCalculationModeChange();
 });

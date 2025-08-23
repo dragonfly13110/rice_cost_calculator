@@ -28,9 +28,20 @@
         <input type="number" id="area" placeholder="เช่น 10" min="0" step="any" />
       </div>
       <div class="input-group">
-        <label for="yield">ผลผลิตที่คาดว่าจะได้ (กิโลกรัม):</label>
-        <input type="number" id="yield" placeholder="เช่น 5000" min="0" step="any" />
+        <label for="yield">ผลผลิตที่คาดว่าจะได้ (ตัน):</label>
+        <input type="number" id="yield" placeholder="เช่น 5" min="0" step="any" />
       </div>
+      <div class="input-group">
+        <label for="pricePerTon">ราคาจำหน่าย (บาท/ตัน):</label>
+        <input type="number" id="pricePerTon" placeholder="0" min="0" step="any" />
+      </div>
+    </div>
+
+    <!-- Calculation mode selection -->
+    <div class="calculation-mode-selection">
+      <span>รูปแบบการคำนวณ:</span>
+      <label><input type="radio" name="calculationMode" value="perRai" checked /> ต่อไร่</label>
+      <label><input type="radio" name="calculationMode" value="total" /> แบบรวม</label>
     </div>
 
     <!-- Method selection -->
@@ -41,7 +52,8 @@
     </div>
 
     <!-- Cost items table -->
-    <table id="costTable">
+    <div id="reportArea">
+      <table id="costTable">
       <thead>
         <tr id="tableHeader">
           <th>หมวดหมู่</th>
@@ -56,14 +68,14 @@
       <tbody id="costTableBody">
         <!-- Dynamic rows will be inserted here -->
       </tbody>
-    </table>
-    <button id="addRowBtn" class="secondary">เพิ่มรายการ</button>
+  </table>
+  <button id="addRowBtn" class="secondary">เพิ่มรายการ</button>
 
-    <!-- Calculate button -->
-    <button id="calculateBtn" class="primary">คำนวณ</button>
+  <!-- Calculate button -->
+  <button id="calculateBtn" class="primary">คำนวณ</button>
 
-    <!-- Results Section -->
-    <div id="results" style="display:none;">
+  <!-- Results Section -->
+  <div id="results" style="display:none;">
       <h2>ผลการคำนวณ</h2>
       <div id="summary">
         <!-- Summary numbers will appear here -->
@@ -73,6 +85,7 @@
       </div>
       <button id="downloadPdfBtn" class="primary">บันทึกเป็น PDF</button>
     </div>
+  </div>
   </div>
 
   <script src="script.js"></script>
