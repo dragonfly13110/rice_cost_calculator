@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>เครื่องคำนวณต้นทุนการผลิตข้าว</title>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- jsPDF and html2canvas for PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>เครื่องคำนวณต้นทุนการผลิตข้าว</h1>
+    <p>
+      กรอกข้อมูลต้นทุนการผลิตข้าวในแต่ละหมวดหมู่ และกำหนดพื้นที่เพาะปลูก (ไร่)
+      กับผลผลิตที่คาดว่าจะได้ (กิโลกรัม) เพื่อคำนวณต้นทุนรวม ต้นทุนต่อไร่ และต้นทุนต่อกิโลกรัม
+      พร้อมแสดงกราฟสัดส่วนของต้นทุนแต่ละประเภท และสามารถบันทึกผลเป็น PDF
+    </p>
+
+    <!-- Basic information inputs -->
+    <div class="inputs">
+      <div class="input-group">
+        <label for="area">พื้นที่เพาะปลูก (ไร่):</label>
+        <input type="number" id="area" placeholder="เช่น 10" min="0" step="any" />
+      </div>
+      <div class="input-group">
+        <label for="yield">ผลผลิตที่คาดว่าจะได้ (กิโลกรัม):</label>
+        <input type="number" id="yield" placeholder="เช่น 5000" min="0" step="any" />
+      </div>
+    </div>
+
+    <!-- Method selection -->
+    <div class="method-selection">
+      <span>รูปแบบการกรอกข้อมูล:</span>
+      <label><input type="radio" name="inputMethod" value="simple" checked /> กรอกค่าใช้จ่ายโดยตรง</label>
+      <label><input type="radio" name="inputMethod" value="detailed" /> กรอกจำนวนและราคา/หน่วย</label>
+    </div>
+
+    <!-- Cost items table -->
+    <table id="costTable">
+      <thead>
+        <tr id="tableHeader">
+          <th>หมวดหมู่</th>
+          <!-- Detailed inputs will insert these headers dynamically -->
+          <th class="simple-col">ค่าใช้จ่าย (บาท)</th>
+          <th class="detailed-col" style="display: none;">จำนวน</th>
+          <th class="detailed-col" style="display: none;">ราคา/หน่วย (บาท)</th>
+          <th>รวม (บาท)</th>
+          <th>จัดการ</th>
+        </tr>
+      </thead>
+      <tbody id="costTableBody">
+        <!-- Dynamic rows will be inserted here -->
+      </tbody>
+    </table>
+    <button id="addRowBtn" class="secondary">เพิ่มรายการ</button>
+
+    <!-- Calculate button -->
+    <button id="calculateBtn" class="primary">คำนวณ</button>
+
+    <!-- Results Section -->
+    <div id="results" style="display:none;">
+      <h2>ผลการคำนวณ</h2>
+      <div id="summary">
+        <!-- Summary numbers will appear here -->
+      </div>
+      <div class="chart-container">
+        <canvas id="costChart"></canvas>
+      </div>
+      <button id="downloadPdfBtn" class="primary">บันทึกเป็น PDF</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
