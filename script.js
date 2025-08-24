@@ -99,7 +99,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Total cost cell (read-only)
     const totalTd = document.createElement('td');
+    totalTd.classList.add('total-col');
     totalTd.textContent = '0';
+    // Hide if in 'perRai' mode, which makes this column redundant
+    if (getCalculationMode() === 'perRai') {
+      totalTd.style.display = 'none';
+    }
     tr.appendChild(totalTd);
 
     // Delete button cell
@@ -169,9 +174,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const costVal = parseFloat(costInput.value);
       total = isNaN(costVal) ? 0 : costVal;
     } else {
-      // quantity and unit price are cells 1 and 2 when detailed
-      const qtyInput = cells[1].querySelector('input');
-      const priceInput = cells[2].querySelector('input');
+      // quantity is cell 2, unit price is cell 3
+      const qtyInput = cells[2].querySelector('input');
+      const priceInput = cells[3].querySelector('input');
       const qty = parseFloat(qtyInput.value);
       const price = parseFloat(priceInput.value);
       total = (isNaN(qty) ? 0 : qty) * (isNaN(price) ? 0 : price);
@@ -554,11 +559,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (simpleHeader) {
       simpleHeader.textContent = (mode === 'perRai') ? 'ค่าใช้จ่ายต่อไร่ (บาท)' : 'ค่าใช้จ่าย (บาท)';
     }
-    // 2) Update the total column header (fifth column)
-    const totalHeader = document.querySelector('#costTable thead tr#tableHeader th:nth-child(5)');
+    // 2) In 'perRai' mode, the total column is redundant, so we hide it.
+    //    In 'total' mode, we show it and set the correct header text.
+    const totalHeader = document.querySelector('#costTable thead tr#tableHeader th.total-col');
     if (totalHeader) {
-      totalHeader.textContent = (mode === 'perRai') ? 'ค่าใช้จ่ายต่อไร่ (บาท)' : 'รวม (บาท)';
+      totalHeader.style.display = (mode === 'perRai') ? 'none' : 'table-cell';
+      totalHeader.textContent = 'รวม (บาท)'; // This text is for 'total' mode.
     }
+
+    // Also hide/show the total column in all existing body rows
+    document.querySelectorAll('#costTableBody .total-col').forEach(cell => {
+      cell.style.display = (mode === 'perRai') ? 'none' : 'table-cell';
+    });
 
     // Clear results because switching mode invalidates previous totals
     resultsSection.style.display = 'none';

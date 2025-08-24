@@ -11,6 +11,17 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <!-- Stylesheet -->
   <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* This style block addresses the layout on mobile devices. */
+    .inputs {
+      display: flex;
+      flex-wrap: wrap; /* Allow items to wrap onto new lines */
+      gap: 1rem;       /* Add consistent spacing between items */
+    }
+    .input-group {
+      flex: 1 1 200px; /* Allow items to grow and shrink, with a base width */
+    }
+  </style>
 </head>
 <body>
   <!-- Modal prompt to choose calculation mode before data entry -->
@@ -75,7 +86,7 @@
             <th class="simple-col">ค่าใช้จ่ายต่อไร่ (บาท)</th>
             <th class="detailed-col" style="display: none;">จำนวน</th>
             <th class="detailed-col" style="display: none;">ราคา/หน่วย (บาท)</th>
-            <th>รวม (บาท)</th>
+            <th class="total-col">รวม (บาท)</th>
             <th>จัดการ</th>
           </tr>
         </thead>

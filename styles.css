@@ -279,9 +279,6 @@ canvas {
   padding: 1rem;
   width: 94vw; /* slightly wider on small screens */
   }
-  .inputs {
-    flex-direction: column;
-  }
   .chart-container {
     max-width: 100%;
   }
