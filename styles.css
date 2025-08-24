@@ -8,13 +8,45 @@ body {
 }
 
 .container {
-  max-width: 900px;
+  /* Fixed max width layout */
+  width: 100%;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 2rem 3rem;
   background-color: #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
   margin-top: 2rem;
+  display: grid;
+  grid-template-columns: 1fr; /* default: long single column */
+  gap: 1.5rem;
+}
+
+.main {
+  min-width: 0;
+}
+
+.sidebar {
+  width: 100%;
+  min-width: 0;
+}
+
+/* When .show-sidebar is added, reveal a right column on wide screens */
+@media (min-width: 1200px) {
+  .container.show-sidebar {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.controls {
+  display: flex;
+  flex-direction: row; /* single line */
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: nowrap; /* keep on one line on wider screens */
+  position: sticky;
+  top: 24px;
+  align-self: start;
 }
 
 h1 {
@@ -41,6 +73,7 @@ p {
   flex-wrap: wrap;
   gap: 1rem;
   margin-bottom: 1rem;
+  align-items: end;
 }
 
 .input-group {
@@ -142,8 +175,32 @@ button.secondary:hover {
 /* Chart container */
 .chart-container {
   width: 100%;
-  max-width: 600px;
-  margin: 1.5rem auto;
+  margin: 1.5rem 0;
+}
+
+/* Compact button sizing when inside the controls block */
+.controls button {
+  padding: 0.35rem 0.7rem;
+  font-size: 0.95rem;
+  border-radius: 6px;
+  line-height: 1;
+}
+
+/* Make the calculate button a bit longer for emphasis */
+.controls #calculateBtn {
+  min-width: 160px;
+  padding-left: 0.9rem;
+  padding-right: 0.9rem;
+}
+
+/* Make sidebar chart larger when visible */
+.container.show-sidebar .sidebar .chart-container {
+  width: 100%;
+  height: 420px;
+}
+.sidebar .chart-container {
+  width: 100%;
+  height: 320px;
 }
 
 canvas {
@@ -152,31 +209,38 @@ canvas {
 }
 
 /* Summary section */
+.main-summary {
+  margin-top: 1.5rem;
+}
+
 #summary {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
-  margin-bottom: 1.5rem;
+  justify-content: center; /* Center the cards */
 }
 
 #summary .card {
-  flex: 1 1 250px;
   background-color: #f0f7f5;
-  padding: 1rem;
-  border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  padding: 0.8rem 1.2rem; /* Slightly more padding */
+  border-radius: 8px; /* More rounded corners */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  text-align: center;
+  flex: 0 1 200px; /* Flex-grow, flex-shrink, flex-basis */
+  min-width: 180px; /* Minimum width for smaller screens */
 }
 
 #summary .card h3 {
-  margin: 0 0 0.5rem 0;
-  font-size: 1rem;
+  margin: 0 0 0.3rem 0;
+  font-size: 0.9rem; /* Slightly smaller title */
   color: #004d40;
+  font-weight: 600;
 }
 
 #summary .card p {
   margin: 0;
-  font-size: 1.3rem;
-  font-weight: bold;
+  font-size: 1.1rem; /* Slightly larger number */
+  font-weight: 700;
   color: #00695c;
 }
 
@@ -203,12 +267,58 @@ canvas {
   background-color: #c62828;
 }
 
-@media (max-width: 600px) {
+/* Responsive adjustments */
+@media (max-width: 1199px) {
+  .container {
+  grid-template-columns: 1fr; /* stack for smaller screens */
+  padding: 1rem;
+  width: 94vw; /* slightly wider on small screens */
+  }
   .inputs {
     flex-direction: column;
   }
-
-  #summary {
-    flex-direction: column;
+  .chart-container {
+    max-width: 100%;
   }
 }
+
+@media (max-width: 600px) {
+  table {
+    font-size: 0.95rem;
+  }
+  /* Allow the compact control buttons to wrap on small screens */
+  .controls {
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .controls #calculateBtn {
+    min-width: 120px;
+  }
+}
+
+/* Modal styles for initial mode selection */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.modal.hidden { display: none; }
+.modal-content {
+  background: #fff;
+  padding: 1.2rem 1.5rem;
+  border-radius: 8px;
+  max-width: 420px;
+  width: 92%;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  text-align: center;
+}
+.modal-content h3 { margin: 0 0 0.5rem 0; }
+.modal-actions { display: flex; gap: 0.6rem; justify-content: center; margin: 0.8rem 0; }
+.modal .remember { display: block; font-size: 0.9rem; color: #666; margin-top: 0.6rem; }
+.modal .modal-btn { flex: 1 1 120px; padding: 0.6rem 0.8rem; border-radius: 6px; border: none; cursor: pointer; }
+.modal .modal-btn.primary { background: #009688; color: #fff; }
+.modal .modal-btn.secondary { background: #e0e0e0; color: #333; }

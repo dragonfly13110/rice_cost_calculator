@@ -256,11 +256,54 @@ document.addEventListener('DOMContentLoaded', () => {
     // Show selling price per ton (and equivalent per-kg) if provided
     includePricePerTon();
 
+    // Calculate revenue and profit
+    const priceInput = document.getElementById('pricePerTon');
+    const pricePerTon = parseFloat(priceInput.value);
+    const revenueTotal = (!isNaN(pricePerTon) && !isNaN(yieldTons)) ? pricePerTon * yieldTons : null;
+
+    // Profit (positive = กำไร, negative = ขาดทุน)
+    const profitTotal = (revenueTotal != null) ? (revenueTotal - totalCost) : null;
+    const profitPerRai = (profitTotal != null && !isNaN(area) && area > 0) ? profitTotal / area : null;
+
+    // Revenue card
+    const revenueCard = document.createElement('div');
+    revenueCard.classList.add('card');
+    const revenueText = (revenueTotal != null) ? `${formatNumber(revenueTotal)} บาท` : '—';
+    revenueCard.innerHTML = `<h3>รายได้รวม</h3><p>${revenueText}</p>`;
+    summaryContainer.appendChild(revenueCard);
+
+    // Profit / Loss card
+    const profitCard = document.createElement('div');
+    profitCard.classList.add('card');
+    let profitText = '—';
+    if (profitTotal != null) {
+      const absVal = Math.abs(profitTotal);
+      if (profitTotal >= 0) {
+        profitText = `กำไร ${formatNumber(absVal)} บาท`;
+      } else {
+        profitText = `ขาดทุน ${formatNumber(absVal)} บาท`;
+      }
+    }
+    profitCard.innerHTML = `<h3>กำไร/ขาดทุนรวม</h3><p>${profitText}</p>`;
+    summaryContainer.appendChild(profitCard);
+
+    // Profit per rai card
+    const profitRaiCard = document.createElement('div');
+    profitRaiCard.classList.add('card');
+    const profitRaiText = (profitPerRai != null) ? `${formatNumber(profitPerRai)} บาท/ไร่` : '—';
+    profitRaiCard.innerHTML = `<h3>กำไร/ขาดทุนต่อไร่</h3><p>${profitRaiText}</p>`;
+    summaryContainer.appendChild(profitRaiCard);
+
     // Update chart - The chart shows proportions, so the raw data from the table is correct.
     updateChart(labels, data);
 
     // Show results section
     resultsSection.style.display = 'block';
+    // Scroll summary into view on small screens so user sees profit numbers
+    const summaryEl = document.getElementById('summary');
+    if (summaryEl) {
+      summaryEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 
   /**
@@ -280,7 +323,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const b = Math.floor(Math.random() * 156) + 100;
       return `rgba(${r}, ${g}, ${b}, 0.7)`;
     });
-    costChart = new Chart(costChartCtx, {
+  // Ensure canvas is high-DPI for crisp text
+  const canvas = costChartCtx.canvas;
+  const ratio = window.devicePixelRatio || 1;
+  // Resize canvas backing store
+  canvas.width = canvas.clientWidth * ratio;
+  canvas.height = canvas.clientHeight * ratio;
+  costChartCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+  costChart = new Chart(costChartCtx, {
       type: 'pie',
       data: {
         labels: labels,
@@ -292,7 +343,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }]
       },
       options: {
-        responsive: true,
+    responsive: true,
+    maintainAspectRatio: false,
         plugins: {
           legend: {
             position: 'bottom'
@@ -399,8 +451,14 @@ document.addEventListener('DOMContentLoaded', () => {
    * Handle switching between calculation modes.
    */
   function onCalculationModeChange() {
-    // Update the total column header based on selected mode
+    // Update headers based on selected mode
     const mode = getCalculationMode();
+    // 1) Update the simple-cost column header (second column)
+    const simpleHeader = document.querySelector('#costTable thead tr#tableHeader th.simple-col');
+    if (simpleHeader) {
+      simpleHeader.textContent = (mode === 'perRai') ? 'ค่าใช้จ่ายต่อไร่ (บาท)' : 'ค่าใช้จ่าย (บาท)';
+    }
+    // 2) Update the total column header (fifth column)
     const totalHeader = document.querySelector('#costTable thead tr#tableHeader th:nth-child(5)');
     if (totalHeader) {
       totalHeader.textContent = (mode === 'perRai') ? 'ค่าใช้จ่ายต่อไร่ (บาท)' : 'รวม (บาท)';
@@ -410,10 +468,49 @@ document.addEventListener('DOMContentLoaded', () => {
     resultsSection.style.display = 'none';
   }
 
-  // Add initial rows using predefined categories
-  function initRows() {
+    // Add initial rows using predefined categories
+    function initRows() {
     predefinedCategories.forEach(name => addRow(name));
   }
+
+    // Modal wiring: show on first load unless user remembered a choice
+    function initModeModal() {
+      const modal = document.getElementById('modeModal');
+      if (!modal) return;
+      const rememberFlag = localStorage.getItem('calcModeRemember') === '1';
+      const savedMode = localStorage.getItem('calcMode');
+
+      // If a saved mode exists and user chose to remember, apply it and hide modal
+      if (savedMode && rememberFlag) {
+        const radio = document.querySelector(`input[name="calculationMode"][value="${savedMode}"]`);
+        if (radio) {
+          radio.checked = true;
+          onCalculationModeChange();
+        }
+        modal.classList.add('hidden');
+        return;
+      }
+
+      // Otherwise show modal so user selects a mode (unless they already saved a mode without remember)
+      modal.classList.remove('hidden');
+      const btnPerRai = document.getElementById('choosePerRai');
+      const btnTotal = document.getElementById('chooseTotal');
+      if (btnPerRai) btnPerRai.addEventListener('click', () => selectModalMode('perRai'));
+      if (btnTotal) btnTotal.addEventListener('click', () => selectModalMode('total'));
+    }
+
+    function selectModalMode(mode) {
+      const modal = document.getElementById('modeModal');
+      const rememberCheckbox = document.getElementById('rememberMode');
+      const radio = document.querySelector(`input[name="calculationMode"][value="${mode}"]`);
+      if (radio) radio.checked = true;
+      onCalculationModeChange();
+      if (rememberCheckbox && rememberCheckbox.checked) {
+        localStorage.setItem('calcModeRemember', '1');
+        localStorage.setItem('calcMode', mode);
+      }
+      if (modal) modal.classList.add('hidden');
+    }
 
   // Event listeners
   addRowBtn.addEventListener('click', () => addRow());
@@ -430,4 +527,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initRows();
   // Ensure header matches current calculation mode on load
   onCalculationModeChange();
+  // Initialize modal to prompt mode selection if needed
+  initModeModal();
 });
