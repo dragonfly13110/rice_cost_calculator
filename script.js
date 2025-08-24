@@ -407,8 +407,9 @@ document.addEventListener('DOMContentLoaded', () => {
     container.style.position = 'absolute';
     container.style.left = '-9999px';
     container.style.top = '0';
+    container.style.fontFamily = '"Kanit", sans-serif'; // Ensure PDF uses the correct font
     container.style.color = '#000';
-    container.style.fontSize = '16px';
+    container.style.fontSize = '18px'; // Larger base font for PDF
     container.style.lineHeight = '1.45';
 
     // Helper to clone a node and replace inputs with text so values appear
@@ -428,9 +429,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Append table clone
     const reportClone = cloneWithValues(report);
     // Slightly enlarge table fonts inside the clone
-    reportClone.style.fontSize = '15px';
-    reportClone.querySelectorAll('th').forEach(th => th.style.fontSize = '14px');
-    reportClone.querySelectorAll('td').forEach(td => td.style.fontSize = '13px');
+    reportClone.style.fontSize = '16px';
+    reportClone.querySelectorAll('th').forEach(th => th.style.fontSize = '15px');
+    reportClone.querySelectorAll('td').forEach(td => td.style.fontSize = '14px');
     container.appendChild(reportClone);
 
     // Append results clone (summary + chart)
@@ -470,8 +471,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // Slightly larger fonts for summary
-      resultsClone.querySelectorAll('.card h3').forEach(h => h.style.fontSize = '15px');
-      resultsClone.querySelectorAll('.card p').forEach(p => p.style.fontSize = '16px');
+      resultsClone.querySelectorAll('.card h3').forEach(h => h.style.fontSize = '17px');
+      resultsClone.querySelectorAll('.card p').forEach(p => p.style.fontSize = '18px');
 
       container.appendChild(resultsClone);
     }

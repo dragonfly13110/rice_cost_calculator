@@ -1,8 +1,9 @@
 /* General styles */
 body {
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Kanit", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   margin: 0;
   padding: 0;
+  font-size: 17px; /* Base font size increased for readability */
   background-color: #f2f4f8;
   color: #333;
 }
@@ -237,14 +238,14 @@ canvas {
 
 #summary .card h3 {
   margin: 0 0 0.3rem 0;
-  font-size: 0.9rem; /* Slightly smaller title */
+  font-size: 1rem; /* Card title */
   color: #004d40;
   font-weight: 600;
 }
 
 #summary .card p {
   margin: 0;
-  font-size: 1.1rem; /* Slightly larger number */
+  font-size: 1.15rem; /* Slightly larger number */
   font-weight: 700;
   color: #00695c;
 }
