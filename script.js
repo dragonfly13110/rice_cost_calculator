@@ -317,44 +317,67 @@ document.addEventListener('DOMContentLoaded', () => {
       costChart.destroy();
     }
     // Generate random pastel colors for chart segments
-    const colors = labels.map(() => {
-      const r = Math.floor(Math.random() * 156) + 100; // 100-255
-      const g = Math.floor(Math.random() * 156) + 100;
-      const b = Math.floor(Math.random() * 156) + 100;
-      return `rgba(${r}, ${g}, ${b}, 0.7)`;
+    // Generate a pleasant HSL pastel palette instead of random RGB
+    const colors = labels.map((_, i) => {
+      const hue = (i * 47) % 360; // spaced hues
+      const sat = 65; // saturation
+      const light = 70; // lightness for pastel
+      return `hsl(${hue} ${sat}% ${light}%)`;
     });
-  // Ensure canvas is high-DPI for crisp text
+
+    // Ensure canvas is high-DPI for crisp text
   const canvas = costChartCtx.canvas;
   const ratio = window.devicePixelRatio || 1;
   // Resize canvas backing store
   canvas.width = canvas.clientWidth * ratio;
   canvas.height = canvas.clientHeight * ratio;
   costChartCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
-
   costChart = new Chart(costChartCtx, {
-      type: 'pie',
+      type: 'doughnut',
       data: {
         labels: labels,
         datasets: [{
           data: data,
           backgroundColor: colors,
           borderColor: '#ffffff',
-          borderWidth: 2
+          borderWidth: 2,
+          hoverOffset: 12
         }]
       },
       options: {
-    responsive: true,
-    maintainAspectRatio: false,
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: {
+          padding: 12
+        },
         plugins: {
           legend: {
-            position: 'bottom'
+            position: 'bottom',
+            labels: {
+              usePointStyle: true,
+              pointStyle: 'circle',
+              padding: 12,
+              font: {
+                size: 14
+              }
+            }
           },
           title: {
             display: true,
             text: 'สัดส่วนต้นทุนแต่ละหมวดหมู่',
             font: {
-              size: 16
+              size: 18,
+              weight: '600'
             }
+          },
+          tooltip: {
+            bodyFont: { size: 13 },
+            titleFont: { size: 14 }
+          }
+        },
+        elements: {
+          arc: {
+            borderWidth: 2
           }
         }
       }
@@ -365,49 +388,122 @@ document.addEventListener('DOMContentLoaded', () => {
    * Generate a PDF of the results section using html2canvas and jsPDF.
    */
   async function generatePDF() {
-  // Capture the report area (table + results) so the table is included in the PDF.
-  // To avoid Thai text in input fields being slightly clipped at the bottom,
-  // clone the element, add a small bottom padding, render the clone off-screen,
-  // then remove it. This preserves on-screen styles while giving extra space.
-  const original = document.getElementById('reportArea') || document.getElementById('results');
-  if (!original) return;
+    // Build an off-screen container that will hold the table and results
+    const report = document.getElementById('reportArea');
+    const resultsEl = document.getElementById('results');
+    if (!report) return;
 
-  // Create an off-screen clone with extra bottom padding
-  const clone = original.cloneNode(true);
-  const origStyle = getComputedStyle(original);
-  clone.style.boxSizing = 'border-box';
-  clone.style.background = origStyle.backgroundColor || '#ffffff';
-  // Add a bit of padding to avoid clipping of input text
-  clone.style.paddingBottom = '28px';
-  // Ensure clone has same width as original for consistent rendering
-  clone.style.width = origStyle.width;
-  clone.style.position = 'absolute';
-  clone.style.left = '-9999px';
-  clone.style.top = '0';
-  document.body.appendChild(clone);
+    const container = document.createElement('div');
+    // Make fonts larger so the rendered PDF is readable and fills A4
+    container.style.boxSizing = 'border-box';
+    container.style.background = '#ffffff';
+    container.style.padding = '20px';
+    container.style.width = '900px'; // wide rendering size for A4
+    container.style.position = 'absolute';
+    container.style.left = '-9999px';
+    container.style.top = '0';
+    container.style.color = '#000';
+    container.style.fontSize = '16px';
+    container.style.lineHeight = '1.45';
 
-  // Wait a tick so browser can render the clone and load fonts if needed
-  await new Promise(resolve => setTimeout(resolve, 80));
+    // Helper to clone a node and replace inputs with text so values appear
+    function cloneWithValues(node) {
+      const clone = node.cloneNode(true);
+      clone.querySelectorAll('input').forEach((inp) => {
+        const span = document.createElement('span');
+        span.textContent = inp.value || '';
+        // preserve some styling
+        span.style.fontFamily = getComputedStyle(inp).fontFamily;
+        span.style.fontSize = getComputedStyle(inp).fontSize;
+        if (inp.parentNode) inp.parentNode.replaceChild(span, inp);
+      });
+      return clone;
+    }
 
-  // Capture the clone as canvas
-  const canvas = await html2canvas(clone, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+    // Append table clone
+    const reportClone = cloneWithValues(report);
+    // Slightly enlarge table fonts inside the clone
+    reportClone.style.fontSize = '15px';
+    reportClone.querySelectorAll('th').forEach(th => th.style.fontSize = '14px');
+    reportClone.querySelectorAll('td').forEach(td => td.style.fontSize = '13px');
+    container.appendChild(reportClone);
 
-  // Clean up clone
-  document.body.removeChild(clone);
+    // Append results clone (summary + chart)
+    if (resultsEl) {
+      const resultsClone = cloneWithValues(resultsEl);
+      resultsClone.style.display = 'block';
+      resultsClone.style.marginTop = '18px';
 
-  const imgData = canvas.toDataURL('image/png');
-  const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
-  const pdfWidth = pdf.internal.pageSize.getWidth();
-  const pdfHeight = pdf.internal.pageSize.getHeight();
-  // Calculate image dimensions to fit within A4 page while maintaining aspect ratio
-  const imgProps = { width: canvas.width, height: canvas.height };
-  const ratio = Math.min(pdfWidth / imgProps.width, pdfHeight / imgProps.height);
-  const imgWidth = imgProps.width * ratio;
-  const imgHeight = imgProps.height * ratio;
-  const x = (pdfWidth - imgWidth) / 2;
-  const y = 10; // top margin
-  pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
-  pdf.save('rice_cost_report.pdf');
+      // Replace cloned chart canvas with an image generated from live canvas
+      const liveCanvas = document.getElementById('costChart');
+      if (liveCanvas) {
+        try {
+          // Create a temporary canvas with white background to avoid black JPEG backgrounds
+          const tmp = document.createElement('canvas');
+          tmp.width = liveCanvas.width;
+          tmp.height = liveCanvas.height;
+          const tctx = tmp.getContext('2d');
+          // fill white
+          tctx.fillStyle = '#ffffff';
+          tctx.fillRect(0, 0, tmp.width, tmp.height);
+          // draw the chart onto the tmp canvas
+          tctx.drawImage(liveCanvas, 0, 0);
+          // export as JPEG with good quality
+          const chartImgSrc = tmp.toDataURL('image/jpeg', 0.92);
+          const img = document.createElement('img');
+          img.src = chartImgSrc;
+          img.style.width = '100%';
+          img.style.height = 'auto';
+          img.style.background = '#ffffff';
+          // Replace any cloned canvas node
+          const clonedCanvas = resultsClone.querySelector('#costChart');
+          if (clonedCanvas && clonedCanvas.parentNode) clonedCanvas.parentNode.replaceChild(img, clonedCanvas);
+          else resultsClone.appendChild(img);
+        } catch (err) {
+          console.warn('Failed to convert chart for PDF export', err);
+        }
+      }
+
+      // Slightly larger fonts for summary
+      resultsClone.querySelectorAll('.card h3').forEach(h => h.style.fontSize = '15px');
+      resultsClone.querySelectorAll('.card p').forEach(p => p.style.fontSize = '16px');
+
+      container.appendChild(resultsClone);
+    }
+
+    document.body.appendChild(container);
+
+    // Give browser a moment to render
+    await new Promise(r => setTimeout(r, 140));
+
+    // Render at higher scale for clarity on A4
+    const scale = 2.2;
+    const canvas = await html2canvas(container, { scale, useCORS: true, backgroundColor: '#ffffff' });
+
+    // Clean up
+    document.body.removeChild(container);
+
+    // Convert to JPEG to reduce size but ensure background is white
+    const imgData = canvas.toDataURL('image/jpeg', 0.9);
+    const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+
+    // Convert canvas px to mm (approx) and fit to A4 with small margins
+    const pxToMm = px => px * 0.264583;
+    const imgWidthMm = pxToMm(canvas.width);
+    const imgHeightMm = pxToMm(canvas.height);
+    const margin = 10; // mm
+    const maxWidth = pdfWidth - margin * 2;
+    const maxHeight = pdfHeight - margin * 2;
+    const ratio = Math.min(maxWidth / imgWidthMm, maxHeight / imgHeightMm);
+    const finalW = imgWidthMm * ratio;
+    const finalH = imgHeightMm * ratio;
+    const x = (pdfWidth - finalW) / 2;
+    const y = margin;
+
+    pdf.addImage(imgData, 'JPEG', x, y, finalW, finalH);
+    pdf.save('rice_cost_report.pdf');
   }
 
   /**

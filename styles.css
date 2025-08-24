@@ -203,6 +203,11 @@ button.secondary:hover {
   height: 320px;
 }
 
+/* Make main chart a bit taller for better visual balance */
+.main-summary .chart-container {
+  height: 420px;
+}
+
 canvas {
   width: 100% !important;
   height: auto !important;
