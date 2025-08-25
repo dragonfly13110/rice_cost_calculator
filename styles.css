@@ -27,18 +27,6 @@ body {
   min-width: 0;
 }
 
-.sidebar {
-  width: 100%;
-  min-width: 0;
-}
-
-/* When .show-sidebar is added, reveal a right column on wide screens */
-@media (min-width: 1200px) {
-  .container.show-sidebar {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
 .controls {
   display: flex;
   flex-direction: row; /* single line */
@@ -132,17 +120,16 @@ tr:hover {
   background-color: #f1f1f1;
 }
 
-td input[type="number"], td input[type="text"] {
+td input[type="number"], td input[type="text"], td select {
   width: 100%;
   box-sizing: border-box;
   padding: 0.4rem;
   border: 1px solid #ccc;
   border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.95rem;
 }
 
-td input[type="text"] {
-  font-family: inherit;
-}
 
 /* Buttons */
 button {
@@ -194,16 +181,6 @@ button.secondary:hover {
   padding-right: 0.9rem;
 }
 
-/* Make sidebar chart larger when visible */
-.container.show-sidebar .sidebar .chart-container {
-  width: 100%;
-  height: 420px;
-}
-.sidebar .chart-container {
-  width: 100%;
-  height: 320px;
-}
-
 /* Make main chart a bit taller for better visual balance */
 .main-summary .chart-container {
   height: 420px;
@@ -250,6 +227,14 @@ canvas {
   color: #00695c;
 }
 
+#summary .card small {
+  display: block;
+  font-size: 0.8rem;
+  color: #555;
+  margin-top: 0.2rem;
+  line-height: 1.2;
+}
+
 /* Hide elements for dynamic columns */
 .detailed-col {
   display: none;
@@ -273,6 +258,57 @@ canvas {
   background-color: #c62828;
 }
 
+/* === NEW: Mode Selection Buttons === */
+#modeSelectionContainer h2 {
+  text-align: center;
+  color: #004d40;
+  margin-bottom: 1.5rem;
+}
+.mode-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+.mode-btn {
+  all: unset; /* Reset button styles */
+  display: block;
+  padding: 1.5rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-sizing: border-box; /* Important for consistent sizing */
+}
+.mode-btn:hover {
+  border-color: #009688;
+  box-shadow: 0 4px 12px rgba(0, 150, 136, 0.15);
+  transform: translateY(-5px);
+}
+.mode-btn h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+  color: #00796b;
+}
+.mode-btn p {
+  margin: 0;
+  font-size: 1rem;
+  color: #555;
+  line-height: 1.4;
+}
+
+
+/* === NEW: Advanced Mode Column Visibility === */
+body.basic-mode .advanced-col,
+#costTable .advanced-col {
+  display: none;
+}
+body.advanced-mode .advanced-col {
+  display: table-cell;
+}
+
+
 /* Responsive adjustments */
 @media (max-width: 1199px) {
   .container {
@@ -289,13 +325,15 @@ canvas {
   table {
     font-size: 0.95rem;
   }
-  /* Allow the compact control buttons to wrap on small screens */
   .controls {
     flex-wrap: wrap;
     gap: 0.4rem;
   }
   .controls #calculateBtn {
     min-width: 120px;
+  }
+  .mode-buttons {
+    grid-template-columns: 1fr; /* Stack buttons on mobile */
   }
 }
 
@@ -325,3 +363,66 @@ canvas {
 .modal .modal-btn { flex: 1 1 120px; padding: 0.6rem 0.8rem; border-radius: 6px; border: none; cursor: pointer; }
 .modal .modal-btn.primary { background: #009688; color: #fff; }
 .modal .modal-btn.secondary { background: #e0e0e0; color: #333; }
+
+/* === NEW: Printer-Friendly Version === */
+@media print {
+  body {
+    background-color: #fff;
+    font-size: 11pt;
+    -webkit-print-color-adjust: exact; /* Force colors to print */
+    print-color-adjust: exact;
+  }
+  .container {
+    box-shadow: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  /* Hide unnecessary elements */
+  #modeModal, #modeSelectionContainer, .controls, 
+  .calculation-mode-selection, .method-selection, 
+  h1 + p /* Hide the intro paragraph */ {
+    display: none !important;
+  }
+  
+  h1, h2 {
+    text-align: left;
+    margin-top: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #ccc;
+  }
+
+  /* Show and style the report */
+  #calculatorBody, #reportArea, #results {
+    display: block !important;
+  }
+  
+  table, th, td {
+    border: 1px solid #666;
+  }
+  th {
+    background-color: #f0f0f0 !important;
+  }
+  tr {
+    page-break-inside: avoid;
+  }
+
+  #summary {
+    justify-content: flex-start;
+  }
+  #summary .card {
+    border: 1px solid #ccc;
+    box-shadow: none;
+    flex-basis: 220px; /* Give more space */
+  }
+  .chart-container {
+    page-break-before: always; /* Start chart on a new page */
+    height: auto !important;
+    width: 100% !important;
+    max-width: 700px;
+    margin: 2rem auto;
+  }
+}
