@@ -3,39 +3,23 @@ body {
   font-family: "Kanit", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   margin: 0;
   padding: 0;
-  font-size: 17px; /* Base font size increased for readability */
+  font-size: 17px;
   background-color: #f2f4f8;
   color: #333;
 }
 
 .container {
-  /* Fixed max width layout */
   width: 100%;
   max-width: 1200px;
-  margin: 0 auto;
+  margin: 2rem auto;
   padding: 2rem 3rem;
   background-color: #fff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   border-radius: 10px;
-  margin-top: 2rem;
-  display: grid;
-  grid-template-columns: 1fr; /* default: long single column */
-  gap: 1.5rem;
 }
 
 .main {
   min-width: 0;
-}
-
-.controls {
-  display: flex;
-  flex-direction: row; /* single line */
-  gap: 0.5rem;
-  align-items: center;
-  flex-wrap: nowrap; /* keep on one line on wider screens */
-  position: sticky;
-  top: 24px;
-  align-self: start;
 }
 
 h1 {
@@ -83,15 +67,46 @@ p {
   font-size: 1rem;
 }
 
-/* Method selection */
-.method-selection {
-  margin-bottom: 1rem;
+/* Mode Toggles Layout */
+.mode-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.75rem 1rem;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.calculation-mode-selection, .method-selection {
+  margin: 0;
   font-weight: 500;
 }
 
-.method-selection label {
+.calculation-mode-selection label, .method-selection label {
   margin-left: 0.5rem;
   margin-right: 1rem;
+  cursor: pointer;
+}
+
+button.secondary-toggle {
+  margin: 0 0 0 auto; /* Push button to the right */
+  background-color: #f0f7f5;
+  color: #00796b;
+  border: 1px solid #b2dfdb;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+button.secondary-toggle:hover {
+  background-color: #e0f2f1;
+  border-color: #00796b;
 }
 
 /* Table styles */
@@ -105,6 +120,7 @@ th, td {
   border: 1px solid #ddd;
   padding: 0.5rem;
   text-align: left;
+  vertical-align: middle;
 }
 
 th {
@@ -112,15 +128,7 @@ th {
   font-weight: 600;
 }
 
-tr:nth-child(even) {
-  background-color: #fafafa;
-}
-
-tr:hover {
-  background-color: #f1f1f1;
-}
-
-td input[type="number"], td input[type="text"], td select {
+td input, td select {
   width: 100%;
   box-sizing: border-box;
   padding: 0.4rem;
@@ -130,299 +138,123 @@ td input[type="number"], td input[type="text"], td select {
   font-size: 0.95rem;
 }
 
+/* --- Styles for Management Column --- */
+td.action-cell {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+.cost-type-selector {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+.cost-type-selector label {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    cursor: pointer;
+}
+.cost-type-selector input[type="radio"] {
+    width: auto; /* Override default width for radio buttons */
+    margin: 0;
+}
+/* By default, hide the radio buttons in basic mode */
+body.basic-mode .cost-type-selector {
+    display: none;
+}
+/* Show them in advanced mode */
+body.advanced-mode .cost-type-selector {
+    display: flex;
+}
 
-/* Buttons */
-button {
+/* Controls & Buttons */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
   margin-top: 1rem;
+}
+
+button {
   padding: 0.6rem 1.2rem;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   font-size: 1rem;
+  font-family: 'Kanit', sans-serif;
 }
 
-button.primary {
-  background-color: #009688;
-  color: #fff;
-}
+button.primary { background-color: #009688; color: #fff; }
+button.primary:hover { background-color: #00796b; }
+button.secondary { background-color: #e0e0e0; color: #333; }
+button.secondary:hover { background-color: #d5d5d5; }
 
-button.secondary {
-  background-color: #e0e0e0;
-  color: #333;
-  margin-right: 0.5rem;
-}
-
-button.primary:hover {
-  background-color: #00796b;
-}
-
-button.secondary:hover {
-  background-color: #d5d5d5;
-}
-
-/* Chart container */
-.chart-container {
-  width: 100%;
-  margin: 1.5rem 0;
-}
-
-/* Compact button sizing when inside the controls block */
-.controls button {
-  padding: 0.35rem 0.7rem;
-  font-size: 0.95rem;
-  border-radius: 6px;
-  line-height: 1;
-}
-
-/* Make the calculate button a bit longer for emphasis */
-.controls #calculateBtn {
-  min-width: 160px;
-  padding-left: 0.9rem;
-  padding-right: 0.9rem;
-}
-
-/* Make main chart a bit taller for better visual balance */
-.main-summary .chart-container {
-  height: 420px;
-}
-
-canvas {
-  width: 100% !important;
-  height: auto !important;
-}
-
-/* Summary section */
-.main-summary {
-  margin-top: 1.5rem;
-}
-
-#summary {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  justify-content: center; /* Center the cards */
-}
-
-#summary .card {
-  background-color: #f0f7f5;
-  padding: 0.8rem 1.2rem; /* Slightly more padding */
-  border-radius: 8px; /* More rounded corners */
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-  text-align: center;
-  flex: 0 1 200px; /* Flex-grow, flex-shrink, flex-basis */
-  min-width: 180px; /* Minimum width for smaller screens */
-}
-
-#summary .card h3 {
-  margin: 0 0 0.3rem 0;
-  font-size: 1rem; /* Card title */
-  color: #004d40;
-  font-weight: 600;
-}
-
-#summary .card p {
-  margin: 0;
-  font-size: 1.15rem; /* Slightly larger number */
-  font-weight: 700;
-  color: #00695c;
-}
-
-#summary .card small {
-  display: block;
-  font-size: 0.8rem;
-  color: #555;
-  margin-top: 0.2rem;
-  line-height: 1.2;
-}
-
-/* Hide elements for dynamic columns */
-.detailed-col {
-  display: none;
-}
-
-.simple-col {
-  display: table-cell;
-}
-
-/* Delete button */
 .delete-btn {
   background-color: #e53935;
   color: #fff;
-  border: none;
-  border-radius: 4px;
   padding: 0.4rem 0.8rem;
-  cursor: pointer;
+  margin-left: auto; /* Push to the right within the flex container */
+  flex-shrink: 0; /* Prevent it from shrinking */
 }
+.delete-btn:hover { background-color: #c62828; }
 
-.delete-btn:hover {
-  background-color: #c62828;
-}
+/* Summary & Chart */
+.main-summary { margin-top: 1.5rem; }
+#summary { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; }
+#summary .card { background-color: #f0f7f5; padding: 0.8rem 1.2rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); text-align: center; flex: 0 1 200px; min-width: 180px; }
+#summary .card h3 { margin: 0 0 0.3rem 0; font-size: 1rem; color: #004d40; font-weight: 600; }
+#summary .card p { margin: 0; font-size: 1.15rem; font-weight: 700; color: #00695c; }
+#summary .card small { display: block; font-size: 0.8rem; color: #555; margin-top: 0.2rem; line-height: 1.2; }
+.chart-container { width: 100%; margin: 1.5rem 0; height: 420px; }
+canvas { width: 100% !important; height: auto !important; }
 
-/* === NEW: Mode Selection Buttons === */
-#modeSelectionContainer h2 {
-  text-align: center;
-  color: #004d40;
-  margin-bottom: 1.5rem;
-}
-.mode-buttons {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
-.mode-btn {
-  all: unset; /* Reset button styles */
-  display: block;
-  padding: 1.5rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 10px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  box-sizing: border-box; /* Important for consistent sizing */
-}
-.mode-btn:hover {
-  border-color: #009688;
-  box-shadow: 0 4px 12px rgba(0, 150, 136, 0.15);
-  transform: translateY(-5px);
-}
-.mode-btn h3 {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.5rem;
-  color: #00796b;
-}
-.mode-btn p {
-  margin: 0;
-  font-size: 1rem;
-  color: #555;
-  line-height: 1.4;
-}
+/* DYNAMIC COLUMN VISIBILITY (Simplified for method selection) */
+.detailed-col { display: none; }
+.simple-col { display: table-cell; }
 
-
-/* === NEW: Advanced Mode Column Visibility === */
-body.basic-mode .advanced-col,
-#costTable .advanced-col {
-  display: none;
-}
-body.advanced-mode .advanced-col {
-  display: table-cell;
-}
-
-
-/* Responsive adjustments */
-@media (max-width: 1199px) {
-  .container {
-  grid-template-columns: 1fr; /* stack for smaller screens */
-  padding: 1rem;
-  width: 94vw; /* slightly wider on small screens */
-  }
-  .chart-container {
-    max-width: 100%;
-  }
-}
-
-@media (max-width: 600px) {
-  table {
-    font-size: 0.95rem;
-  }
-  .controls {
-    flex-wrap: wrap;
-    gap: 0.4rem;
-  }
-  .controls #calculateBtn {
-    min-width: 120px;
-  }
-  .mode-buttons {
-    grid-template-columns: 1fr; /* Stack buttons on mobile */
-  }
-}
-
-/* Modal styles for initial mode selection */
-.modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
+/* Modal styles (for per-rai/total selection) */
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 9999; }
 .modal.hidden { display: none; }
-.modal-content {
-  background: #fff;
-  padding: 1.2rem 1.5rem;
-  border-radius: 8px;
-  max-width: 420px;
-  width: 92%;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-  text-align: center;
-}
+.modal-content { background: #fff; padding: 1.2rem 1.5rem; border-radius: 8px; max-width: 420px; width: 92%; box-shadow: 0 6px 20px rgba(0,0,0,0.15); text-align: center; }
 .modal-content h3 { margin: 0 0 0.5rem 0; }
 .modal-actions { display: flex; gap: 0.6rem; justify-content: center; margin: 0.8rem 0; }
 .modal .remember { display: block; font-size: 0.9rem; color: #666; margin-top: 0.6rem; }
-.modal .modal-btn { flex: 1 1 120px; padding: 0.6rem 0.8rem; border-radius: 6px; border: none; cursor: pointer; }
-.modal .modal-btn.primary { background: #009688; color: #fff; }
-.modal .modal-btn.secondary { background: #e0e0e0; color: #333; }
 
-/* === NEW: Printer-Friendly Version === */
-@media print {
-  body {
-    background-color: #fff;
-    font-size: 11pt;
-    -webkit-print-color-adjust: exact; /* Force colors to print */
-    print-color-adjust: exact;
+/* Responsive Adjustments */
+@media (max-width: 992px) {
+  .mode-toggles {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
   }
-  .container {
-    box-shadow: none;
-    border: none;
-    padding: 0;
-    margin: 0;
+  button.secondary-toggle {
+    margin-left: 0;
     width: 100%;
-    max-width: 100%;
+    text-align: center;
   }
-  
-  /* Hide unnecessary elements */
-  #modeModal, #modeSelectionContainer, .controls, 
-  .calculation-mode-selection, .method-selection, 
-  h1 + p /* Hide the intro paragraph */ {
-    display: none !important;
-  }
-  
-  h1, h2 {
-    text-align: left;
-    margin-top: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 2px solid #ccc;
-  }
+}
 
-  /* Show and style the report */
-  #calculatorBody, #reportArea, #results {
-    display: block !important;
-  }
-  
-  table, th, td {
-    border: 1px solid #666;
-  }
-  th {
-    background-color: #f0f0f0 !important;
-  }
-  tr {
-    page-break-inside: avoid;
-  }
+@media (max-width: 768px) {
+  .container { padding: 1.5rem 1rem; }
+}
 
-  #summary {
-    justify-content: flex-start;
-  }
-  #summary .card {
-    border: 1px solid #ccc;
-    box-shadow: none;
-    flex-basis: 220px; /* Give more space */
-  }
-  .chart-container {
-    page-break-before: always; /* Start chart on a new page */
-    height: auto !important;
-    width: 100% !important;
-    max-width: 700px;
-    margin: 2rem auto;
-  }
+/* Print styles */
+@media print {
+  body { background-color: #fff; font-size: 11pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .container { box-shadow: none; border: none; padding: 0; margin: 0; width: 100%; max-width: 100%; }
+  
+  .mode-toggles, .controls, #modeModal, h1 + p { display: none !important; }
+  
+  h1, h2 { text-align: left; margin-top: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #ccc; }
+  #reportArea, #results { display: block !important; }
+  table, th, td { border: 1px solid #666; }
+  th { background-color: #f0f0f0 !important; }
+  tr { page-break-inside: avoid; }
+  .cost-type-selector { display: none !important; } /* Hide radio buttons on print */
+  #summary { justify-content: flex-start; }
+  #summary .card { border: 1px solid #ccc; box-shadow: none; flex-basis: 220px; }
+  .chart-container { page-break-before: always; height: auto !important; width: 100% !important; max-width: 700px; margin: 2rem auto; }
 }

@@ -4,98 +4,107 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>เครื่องคำนวณต้นทุนการผลิตข้าว</title>
-  <!-- ... (ส่วน head อื่นๆ เหมือนเดิม) ... -->
+  <!-- Chart.js, jsPDF, html2canvas, Google Fonts (เหมือนเดิม) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
   <style>
-    .inputs { display: flex; flex-wrap: wrap; gap: 1rem; }
+    .inputs { display: flex; flex-wrap: wrap; gap: 0.2rem; }
     .input-group { flex: 1 1 200px; }
+    /* ลดระยะห่างระหว่างกลุ่มปุ่มเลือก */
+    .calculation-mode-selection, .method-selection {
+      width: 100%;
+      margin-bottom: 0; /* ปรับเป็น 0 เพื่อให้ชิดกันมากขึ้น */
+    }
+    /* จัดการตำแหน่งของหัวข้อและปุ่มสลับโหมด */
+    .header-container {
+      display: flex;
+      justify-content: space-between; /* จัดให้หัวข้ออยู่ซ้าย ปุ่มอยู่ขวา */
+      align-items: center; /* จัดให้อยู่กึ่งกลางแนวตั้ง */
+      margin-bottom: 1rem; /* เพิ่มระยะห่างด้านล่างของส่วนหัว */
+    }
   </style>
 </head>
-<body class="mode-selection-pending"> <!-- เพิ่มคลาสนี้เพื่อควบคุมการแสดงผลเริ่มต้น -->
-  <!-- ... (Modal เหมือนเดิม) ... -->
+<body class="basic-mode"> <!-- ตั้งค่าเริ่มต้นเป็น basic-mode -->
+  <!-- Modal (เหมือนเดิม) -->
+  <div id="modeModal" class="modal hidden">
+     <!-- ... เนื้อหา Modal เหมือนเดิม ... -->
+  </div>
 
   <div class="container">
     <div class="main">
-      <h1>เครื่องคำนวณต้นทุนการผลิตข้าว</h1>
-      <p>
-        เครื่องมือช่วยเกษตรกรวิเคราะห์ต้นทุนการผลิตข้าว กำไรขาดทุน และจุดคุ้มทุน
-        เพื่อการวางแผนที่มีประสิทธิภาพ
-      </p>
-
-      <!-- === เพิ่มส่วนนี้: ปุ่มเลือกโหมด === -->
-      <div id="modeSelectionContainer">
-        <h2>กรุณาเลือกรูปแบบการวิเคราะห์</h2>
-        <div class="mode-buttons">
-          <button id="chooseBasicMode" class="mode-btn">
-            <h3>คำนวณพื้นฐาน</h3>
-            <p>เหมาะสำหรับผู้เริ่มต้น บันทึกต้นทุนและดูกำไรขาดทุนทั่วไป</p>
-          </button>
-          <button id="chooseAdvancedMode" class="mode-btn">
-            <h3>วิเคราะห์ขั้นสูง</h3>
-            <p>สำหรับผู้ที่ต้องการวิเคราะห์เชิงลึก โดยแยกประเภทต้นทุนคงที่และต้นทุนผันแปร</p>
-          </button>
-        </div>
+      <div class="header-container">
+        <h1>เครื่องคำนวณต้นทุนการผลิตข้าว</h1>
+        <button id="toggleModeBtn" class="secondary-toggle">สลับไปโหมดวิเคราะห์ขั้นสูง</button>
       </div>
-      <!-- === สิ้นสุดส่วนที่เพิ่ม === -->
+      <p>
+        กรอกข้อมูลเพื่อวิเคราะห์ต้นทุน กำไรขาดทุน และจุดคุ้มทุน
+        เพื่อการวางแผนการผลิตที่มีประสิทธิภาพ
+      </p>
       
-      <!-- ครอบเครื่องคำนวณทั้งหมดด้วย div นี้ -->
-      <div id="calculatorBody" style="display: none;"> 
-        <!-- Basic information inputs -->
+      <div id="calculatorBody">
+        <!-- Basic info inputs (เหมือนเดิม) -->
         <div class="inputs">
-          <!-- ... (เหมือนเดิม) ... -->
+            <div class="input-group"><label for="area">พื้นที่เพาะปลูก (ไร่):</label><input type="number" id="area" placeholder="เช่น 10" min="0" step="any" /></div>
+            <div class="input-group"><label for="yield">ผลผลิตที่คาดว่าจะได้ (ตัน):</label><input type="number" id="yield" placeholder="เช่น 5" min="0" step="any" /></div>
+            <div class="input-group"><label for="pricePerTon">ราคาจำหน่าย (บาท/ตัน):</label><input type="number" id="pricePerTon" placeholder="0" min="0" step="any" /></div>
         </div>
 
-        <!-- Calculation mode selection -->
-        <div class="calculation-mode-selection">
-          <!-- ... (เหมือนเดิม) ... -->
+        <!-- Mode Toggles (เหมือนเดิม) -->
+        <div class="mode-toggles">
+          <div class="calculation-mode-selection">
+            <span>รูปแบบการคำนวณ:</span>
+            <label><input type="radio" name="calculationMode" value="perRai" checked /> ต่อไร่</label>
+            <label><input type="radio" name="calculationMode" value="total" /> แบบรวม</label>
+          </div>
+          <div class="method-selection">
+            <span>รูปแบบการกรอกข้อมูล:</span>
+            <label><input type="radio" name="inputMethod" value="simple" checked /> กรอกค่าใช้จ่ายโดยตรง</label>
+            <label><input type="radio" name="inputMethod" value="detailed" /> กรอกจำนวนและราคา/หน่วย</label>
+          </div>
         </div>
 
-        <!-- Method selection -->
-        <div class="method-selection">
-          <!-- ... (เหมือนเดิม) ... -->
-        </div>
-
-        <!-- Cost items table -->
+        <!-- Cost items table (แก้ไขหัวตาราง) -->
         <div id="reportArea">
           <table id="costTable">
             <thead>
               <tr id="tableHeader">
                 <th>หมวดหมู่</th>
-                <!-- === เพิ่มหัวตารางสำหรับโหมดขั้นสูง === -->
-                <th class="advanced-col" style="display: none;">ประเภทต้นทุน</th>
                 <th class="simple-col">ค่าใช้จ่ายต่อไร่ (บาท)</th>
                 <th class="detailed-col" style="display: none;">จำนวน</th>
                 <th class="detailed-col" style="display: none;">หน่วย</th>
                 <th class="detailed-col" style="display: none;">ราคา/หน่วย (บาท)</th>
                 <th class="total-col">รวม (บาท)</th>
-                <th>จัดการ</th>
+                <th id="managementHeader">จัดการ</th>
               </tr>
             </thead>
-            <tbody id="costTableBody">
-              <!-- Dynamic rows will be inserted here -->
-            </tbody>
+            <tbody id="costTableBody"></tbody>
           </table>
         </div>
+        
+        <!-- Controls (เหมือนเดิม) -->
         <div class="controls">
           <button id="addRowBtn" class="secondary">เพิ่มรายการ</button>
           <button id="resetBtn" class="secondary">ล้างข้อมูล</button>
           <button id="calculateBtn" class="primary">คำนวณ</button>
           <button id="downloadPdfBtn" class="primary">บันทึกเป็น PDF</button>
-          <button id="printBtn" class="secondary">พิมพ์รายงาน</button> <!-- เพิ่มปุ่มพิมพ์ -->
+          <button id="printBtn" class="secondary">พิมพ์รายงาน</button>
         </div>
       </div>
     </div>
 
     <div class="main-summary">
       <div id="results" style="display:none;">
-        <!-- ... (เหมือนเดิม) ... -->
+        <h2>ผลการคำนวณ</h2>
+        <div id="summary"></div>
+        <div class="chart-container"><canvas id="costChart"></canvas></div>
       </div>
     </div>
   </div>
-
   <script src="script.js"></script>
 </body>
 </html>
