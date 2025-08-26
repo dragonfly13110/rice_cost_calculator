@@ -331,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(container);
 
     await new Promise(r => setTimeout(r, 100));
-    const canvas = await html2canvas(container, { scale: 2 });
+    const canvas = await html2canvas(container, { scale: 5 });
     const imgData = canvas.toDataURL('image/jpeg', 0.9);
     const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
     const pdfWidth = pdf.internal.pageSize.getWidth();

@@ -246,7 +246,10 @@ canvas { width: 100% !important; height: auto !important; }
   body { background-color: #fff; font-size: 11pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .container { box-shadow: none; border: none; padding: 0; margin: 0; width: 100%; max-width: 100%; }
   
-  .mode-toggles, .controls, #modeModal, h1 + p { display: none !important; }
+  /* Hide non-essential elements */
+  .header-container, .mode-toggles, .controls, #toggleModeBtn, #addRowBtn, #resetBtn, #calculateBtn, #downloadPdfBtn, #printBtn, #managementHeader, .action-cell, #modeModal, h1 + p {
+    display: none !important;
+  }
   
   h1, h2 { text-align: left; margin-top: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #ccc; }
   #reportArea, #results { display: block !important; }
@@ -256,5 +259,19 @@ canvas { width: 100% !important; height: auto !important; }
   .cost-type-selector { display: none !important; } /* Hide radio buttons on print */
   #summary { justify-content: flex-start; }
   #summary .card { border: 1px solid #ccc; box-shadow: none; flex-basis: 220px; }
-  .chart-container { page-break-before: always; height: auto !important; width: 100% !important; max-width: 700px; margin: 2rem auto; }
+  
+  /* Page break control */
+  .main {
+    page-break-after: always;
+  }
+  #results {
+    page-break-inside: avoid;
+  }
+  .chart-container { 
+    height: 500px !important; /* Further increased height for print */
+    width: 100% !important; 
+    max-width: 700px; 
+    margin: 1rem auto 0 auto; /* Reduced top margin */
+    /* The 'page-break-before: always' was removed from here */
+  }
 }
